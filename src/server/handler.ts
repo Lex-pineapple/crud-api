@@ -1,55 +1,68 @@
 import DB from '../db/db.ts';
-import { Server } from '../types';
-import { PaDB } from '../types';
-import http from 'node:http';
+import UrlParser from '../utils/urlParser.ts';
+import { Server, PaDB, Response, Request } from '../types';
+import getReqData from '../utils/getReqData.ts';
 
-class Handler {
+class Handler implements Server.Handler {
   methods: Server.IMethods = {
-    GET: this.manageGet.bind(this),
-    // POST: 'POST',
+    GET: this.manageGET.bind(this),
+    POST: this.managePOST.bind(this),
     // PUT: 'PUT',
     // DELETE: 'DELETE',
   };
-  urls: Server.IUrls = {
-    GET_users: '/api/users',
-    GET_user_by_id: '/api/users/*',
-    POST_user: '/api/users',
-    PUT_user: '/api/users/*',
-    DELETE_user: '/api/users/*',
-  };
   db: PaDB.IDB;
+  parser: UrlParser.UrlParser;
 
   constructor() {
     this.db = new DB();
+    this.parser = new UrlParser();
   }
 
-  getUserId(url: string) {
-    const splitUrl = url.split('/');
-    return splitUrl[splitUrl.length - 1];
+  async manageGET(url: string | undefined, res: Response) {
+    if (url && url.startsWith(this.parser.endpoints.users)) {
+      const parsedUrl = this.parser.parseEndpoint(url, this.parser.endpoints.users);
+      if (parsedUrl) {
+        const user = this.db.getUserById(parsedUrl);
+        if (user) this.approveWrite(res, 200, user);
+        else this.reject(res, 'User ID is invalid', 400);
+      } else {
+        const users = this.db.getAllUsers();
+        this.approveWrite(res, 200, users);
+      }
+    } else this.reject(res, 'Route not found', 404);
   }
 
-  manageGet(url: string | undefined, res: http.ServerResponse<http.IncomingMessage>) {
-    if (url === this.urls.GET_users) {
-      this.approveGet(res, this.db.getAllUsers());
-    } else if (url) {
-      const userId = this.getUserId(url);
-      const user = this.db.getUserById(userId);
-      if (user) this.approveGet(res, user);
-      else this.rejectNotFound(res, 'Route not found');
-    } else this.rejectNotFound(res, 'Route not found');
+  async managePOST(url: string | undefined, res: Response, req: Request) {
+    if (url) {
+      const parsedUrl = this.parser.parseEndpoint(url, this.parser.endpoints.users);
+      console.log(parsedUrl);
+
+      if (!parsedUrl) {
+        const data = await getReqData(req);
+        if (data) {
+          const parsedData = JSON.parse(data);
+          if (this.db.validateUserData(parsedData)) {
+            this.db.createUser(parsedData);
+            this.approveSend(res, 201, parsedData);
+          } else this.reject(res, 'Request body does not contain reqied fields', 400);
+        } else this.reject(res, 'Request body does not contain reqied fields', 400);
+      } else this.reject(res, 'Route not found', 404);
+    } else this.reject(res, 'Route not found', 404);
   }
 
-  approveGet(
-    res: http.ServerResponse<http.IncomingMessage>,
-    message: PaDB.IDBGetResponse | PaDB.IDBRecord
-  ) {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
+  approveWrite(res: Response, statusCode: number, message: PaDB.IDBGetResponse | PaDB.IDBRecord) {
+    res.writeHead(statusCode, { 'Content-Type': 'application/json' });
     res.write(JSON.stringify({ message }));
     res.end();
   }
 
-  rejectNotFound(res: http.ServerResponse<http.IncomingMessage>, message: string) {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
+  approveSend(res: Response, statusCode: number, message: PaDB.IDBGetResponse | PaDB.IDBRecord) {
+    res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(message));
+  }
+
+  reject(res: Response, message: string, statusCode: number) {
+    res.writeHead(statusCode, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ message }));
   }
 }
