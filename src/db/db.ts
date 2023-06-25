@@ -62,9 +62,9 @@ class DB implements PaDB.IDB {
       if (keys.length > 4) return false;
       if (!('id' in data && typeof data.id === 'string')) return false;
     } else if (keys.length > 3) return false;
-    if (!('username' in data && typeof data.username === 'string')) return false;
-    if (!('age' in data && typeof data.age === 'number')) return false;
-    if (!('hobbies' in data && data.hobbies instanceof Array)) return false;
+    else if (!('username' in data && typeof data.username === 'string')) return false;
+    else if (!('age' in data && typeof data.age === 'number')) return false;
+    else if (!('hobbies' in data && data.hobbies instanceof Array)) return false;
     return true;
   }
 
