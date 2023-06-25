@@ -5,7 +5,9 @@ export namespace PaDB {
     getUserById(uid: string): PaDB.IDBRecord | undefined;
     exists(id: string): IDBRecord | undefined;
     createUser(data: PaDB.IDBRecord): void;
-    validateUserData(data: any): boolean;
+    deleteUser(data: PaDB.IDBRecord): void;
+    updateUser(id: string, data: PaDB.IDBRecord): void;
+    validateUserData(data: any, id: boolean): boolean;
   }
 
   export interface IDBGetResponse {
@@ -31,6 +33,10 @@ export namespace Server {
 
     managePOST(url: string | undefined, res: Response, req: Request): Promise<void>;
 
+    manageDELETE(url: string | undefined, res: Response): Promise<void>;
+
+    managePUT(url: string | undefined, res: Response, req: Request): Promise<void>;
+
     approveWrite(
       res: Response,
       statusCode: number,
@@ -49,8 +55,8 @@ export namespace Server {
   export interface IMethods {
     GET: (url: string | undefined, res: Response, req?: Request) => void;
     POST: (url: string | undefined, res: Response, req: Request) => void;
-    // PUT: string;
-    // DELETE: string;
+    PUT: (url: string | undefined, res: Response, req: Request) => void;
+    DELETE: (url: string | undefined, res: Response) => void;
   }
 }
 

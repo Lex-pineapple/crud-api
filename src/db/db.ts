@@ -39,9 +39,29 @@ class DB implements PaDB.IDB {
     ];
   }
 
-  validateUserData(data: any) {
+  deleteUser(data: PaDB.IDBRecord) {
+    const index = this.db.indexOf(data);
+    if (index > -1) this.db.splice(index, 1);
+  }
+
+  updateUser(id: string, data: PaDB.IDBRecord) {
+    console.log(data);
+    const oldUser = this.exists(id);
+    if (oldUser) {
+      const index = this.db.indexOf(oldUser);
+      this.db[index] = {
+        id,
+        ...data,
+      };
+    }
+  }
+
+  validateUserData(data: any, id: boolean) {
     const keys = Object.keys(data);
-    if (keys.length > 3) return false;
+    if (id) {
+      if (keys.length > 4) return false;
+      if (!('id' in data && typeof data.id === 'string')) return false;
+    } else if (keys.length > 3) return false;
     if (!('username' in data && typeof data.username === 'string')) return false;
     if (!('age' in data && typeof data.age === 'number')) return false;
     if (!('hobbies' in data && data.hobbies instanceof Array)) return false;
