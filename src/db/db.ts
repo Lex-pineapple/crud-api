@@ -4,13 +4,13 @@ import { v4 as uuidv4 } from 'uuid';
 class DB implements PaDB.IDB {
   db: PaDB.IDBRecord[] = [
     {
-      id: '1',
+      id: '363538d9-b23a-483d-9847-20b1c9966754',
       username: 'mimi',
       age: 27,
       hobbies: ['barking'],
     },
     {
-      id: '2',
+      id: '49e346fc-d3ce-4048-ad73-6faa1e8d041f',
       username: 'admin',
       age: 9999,
       hobbies: [],
@@ -25,18 +25,14 @@ class DB implements PaDB.IDB {
   }
 
   getUserById(uid: string): PaDB.IDBRecord | undefined {
-    const user = this.exists(uid);
-    return user;
+    return this.db.find((item) => item.id == uid);
   }
 
   createUser(data: PaDB.IDBRecord) {
-    this.db = [
-      ...this.db,
-      {
-        id: uuidv4(),
-        ...data,
-      },
-    ];
+    this.db.push({
+      id: uuidv4(),
+      ...data,
+    });
   }
 
   deleteUser(data: PaDB.IDBRecord) {
@@ -45,8 +41,7 @@ class DB implements PaDB.IDB {
   }
 
   updateUser(id: string, data: PaDB.IDBRecord) {
-    console.log(data);
-    const oldUser = this.exists(id);
+    const oldUser = this.getUserById(id);
     if (oldUser) {
       const index = this.db.indexOf(oldUser);
       this.db[index] = {
@@ -60,7 +55,7 @@ class DB implements PaDB.IDB {
     const keys = Object.keys(data);
     if (id) {
       if (keys.length > 4) return false;
-      if (!('id' in data && typeof data.id === 'string')) return false;
+      else if (!('id' in data && typeof data.id === 'string')) return false;
     } else if (keys.length > 3) return false;
     else if (!('username' in data && typeof data.username === 'string')) return false;
     else if (!('age' in data && typeof data.age === 'number')) return false;
@@ -68,8 +63,10 @@ class DB implements PaDB.IDB {
     return true;
   }
 
-  exists(id: string) {
-    return this.db.find((item) => item.id == id);
+  validateId(id: string) {
+    const uuidRegExp =
+      /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
+    return uuidRegExp.test(id);
   }
 }
 

@@ -7,8 +7,8 @@ const handler = new Handler();
 
 const server = http.createServer(async (req, res) => {
   if (req.method && req.method in handler.methods) {
-    handler.methods[req.method as keyof typeof handler.methods](req.url, res, req);
-  } else handler.reject(res, 'Route not found', 404);
+    handler.delegate(res, req);
+  } else handler.response(res, 'Route not found', 404, 'e');
 });
 
 export default server;

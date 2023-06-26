@@ -3,11 +3,11 @@ export namespace PaDB {
     db: IDBRecord[];
     getAllUsers(): IDBGetResponse;
     getUserById(uid: string): PaDB.IDBRecord | undefined;
-    exists(id: string): IDBRecord | undefined;
     createUser(data: PaDB.IDBRecord): void;
     deleteUser(data: PaDB.IDBRecord): void;
     updateUser(id: string, data: PaDB.IDBRecord): void;
     validateUserData(data: any, id: boolean): boolean;
+    validateId(id: string): boolean;
   }
 
   export interface IDBGetResponse {
@@ -28,6 +28,7 @@ export namespace Server {
     methods: IMethods;
     db: PaDB.IDB;
     parser: UrlParser.UrlParser;
+    endpoints: IEndpoints;
 
     manageGET(url: string | undefined, res: Response, req?: Request): Promise<void>;
 
@@ -37,19 +38,11 @@ export namespace Server {
 
     managePUT(url: string | undefined, res: Response, req: Request): Promise<void>;
 
-    approveWrite(
-      res: Response,
-      statusCode: number,
-      message: PaDB.IDBGetResponse | PaDB.IDBRecord
-    ): void;
+    response(res: Response, message: string, statusCode: number, perm: string): void;
+  }
 
-    approveSend(
-      res: Response,
-      statusCode: number,
-      message: PaDB.IDBGetResponse | PaDB.IDBRecord
-    ): void;
-
-    reject(res: Response, message: string, statusCode: number): void;
+  export interface IEndpoints {
+    users: string;
   }
 
   export interface IMethods {
@@ -62,12 +55,7 @@ export namespace Server {
 
 export namespace UrlParser {
   export interface UrlParser {
-    endpoints: IEndpoints;
     parseEndpoint(url: string, endpoint: string): string;
-  }
-
-  export interface IEndpoints {
-    users: string;
   }
 }
 
