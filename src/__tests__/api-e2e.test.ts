@@ -1,5 +1,7 @@
 import { PaDB } from 'src/types';
 import request from 'supertest';
+import { generateString } from '../utils/generateString';
+import { generateNumber } from '../utils/generateNumber';
 const APILink = 'http://localhost:4000';
 
 describe('e2e tests', () => {
@@ -191,6 +193,90 @@ describe('e2e tests', () => {
       const response = await request(APILink).get(endpoint);
       expect(response.statusCode).toBe(200);
       expect(response.body).toMatchObject(fullDb);
+    });
+
+    test('should delete all records', async () => {
+      const response = await request(APILink).delete(endpoint + '/' + updatedRecord.id);
+      expect(response.statusCode).toBe(204);
+      expect(response.body).toBe('');
+
+      const response2 = await request(APILink).delete(endpoint + '/' + createdRecord2.id);
+      expect(response2.statusCode).toBe(204);
+      expect(response2.body).toBe('');
+    });
+
+    test('should get empty db', async () => {
+      const response = await request(APILink).get(endpoint);
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toMatchObject([]);
+    });
+  });
+  describe('case #3', () => {
+    const genData: PaDB.IDBRecord[] = [];
+    const genData2: PaDB.IDBRecord[] = [];
+    let dbData: PaDB.IDBRecord[] = [];
+    let dbData2: PaDB.IDBRecord[] = [];
+    beforeAll(() => {
+      for (let i = 0; i < 5; i++) {
+        genData.push({
+          username: generateString(5),
+          age: generateNumber(3),
+          hobbies: new Array().fill(generateString(5), generateNumber(1)),
+        });
+      }
+      for (let i = 0; i < 5; i++) {
+        genData2.push({
+          username: generateString(5),
+          age: generateNumber(3),
+          hobbies: new Array().fill(generateString(5), generateNumber(1)),
+        });
+      }
+    });
+
+    describe('random tests', () => {
+      test('should create multiple new records', async () => {
+        for (let i = 0; i < genData.length; i++) {
+          const response = await request(APILink).post(endpoint).send(genData[i]);
+          expect(response.statusCode).toBe(201);
+        }
+      });
+
+      test('should get all records', async () => {
+        const response = await request(APILink).get(endpoint);
+        expect(response.statusCode).toBe(200);
+        expect(response.body.length).toBe(genData.length);
+        dbData = response.body;
+      });
+
+      test('should update all records', async () => {
+        for (let i = 0; i < dbData.length; i++) {
+          const response = await request(APILink)
+            .put(endpoint + '/' + dbData[i].id)
+            .send(genData2[i]);
+          expect(response.statusCode).toBe(200);
+        }
+      });
+
+      test('should get all records', async () => {
+        const response = await request(APILink).get(endpoint);
+        expect(response.statusCode).toBe(200);
+        expect(response.body.length).toBe(genData.length);
+        dbData2 = response.body;
+      });
+
+      test('should delete all records', async () => {
+        for (let i = 0; i < dbData2.length; i++) {
+          const response = await request(APILink).delete(endpoint + '/' + dbData2[i].id);
+          expect(response.statusCode).toBe(204);
+          expect(response.body).toBe('');
+        }
+      });
+
+      test('should get empty db', async () => {
+        const response = await request(APILink).get(endpoint);
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toMatchObject([]);
+      });
     });
   });
 });
