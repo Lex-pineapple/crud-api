@@ -26,7 +26,7 @@ class Handler implements Server.Handler {
     if (req.url && req.url.startsWith(this.endpoints.users)) {
       const parsedUrl = this.parser.parseEndpoint(req.url, this.endpoints.users);
       this.methods[req.method as keyof typeof this.methods](parsedUrl, res, req);
-    } else this.send(res, 'Route not found', 404, 'e');
+    } else this.send(res, JSON.stringify('Route not found'), 404, 'e');
   }
 
   async manageGET(id: string | undefined, res: Response) {
@@ -52,7 +52,7 @@ class Handler implements Server.Handler {
       } catch (error) {
         this.handleError(error, res);
       }
-    } else this.send(res, 'Route not found', 404, 'e');
+    } else this.send(res, JSON.stringify('Route not found'), 404, 'e');
   }
 
   async managePUT(id: string | undefined, res: Response, req: Request) {
@@ -64,7 +64,7 @@ class Handler implements Server.Handler {
       } catch (error) {
         this.handleError(error, res);
       }
-    } else this.send(res, 'Route not found', 404, 'e');
+    } else this.send(res, JSON.stringify('Route not found'), 404, 'e');
   }
 
   async manageDELETE(id: string | undefined, res: Response) {
@@ -75,7 +75,7 @@ class Handler implements Server.Handler {
       } catch (error) {
         this.handleError(error, res);
       }
-    } else this.send(res, 'Route not found', 404, 'e');
+    } else this.send(res, JSON.stringify('Route not found'), 404, 'e');
   }
 
   send(res: Response, message: string, statusCode: number, perm: string) {
