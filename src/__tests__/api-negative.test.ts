@@ -289,7 +289,3 @@ describe('Test negative cases', () => {
     });
   });
 });
-
-describe('e2e tests', () => {
-  test('case #1', () => {});
-});

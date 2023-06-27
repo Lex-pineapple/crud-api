@@ -70,8 +70,8 @@ class Handler implements Server.Handler {
   async manageDELETE(id: string | undefined, res: Response) {
     if (id) {
       try {
-        const message = await this.db.deleteUser(id);
-        this.send(res, JSON.stringify(message), 204, 'e');
+        await this.db.deleteUser(id);
+        this.send(res, '', 204, 'w');
       } catch (error) {
         this.handleError(error, res);
       }
