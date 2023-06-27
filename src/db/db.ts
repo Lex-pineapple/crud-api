@@ -4,27 +4,11 @@ import { RespCodes, CommonErrors } from '../constants.ts';
 import ServerError from '../server/error.ts';
 
 class DB implements PaDB.IDB {
-  db: PaDB.IDBRecord[] = [
-    {
-      id: '363538d9-b23a-483d-9847-20b1c9966754',
-      username: 'mimi',
-      age: 27,
-      hobbies: ['barking'],
-    },
-    {
-      id: '49e346fc-d3ce-4048-ad73-6faa1e8d041f',
-      username: 'admin',
-      age: 9999,
-      hobbies: [],
-    },
-  ];
+  db: PaDB.IDBRecord[] = [];
 
-  getAllUsers(): Promise<PaDB.IDBGetResponse> {
+  getAllUsers(): Promise<PaDB.IDBRecord[]> {
     return new Promise((resolve, _) => {
-      const data = {
-        totalRecords: this.db.length,
-        records: [...this.db],
-      };
+      const data = this.db;
       // throw new Error('Whoopsie!');
       resolve(data);
     });
@@ -49,17 +33,17 @@ class DB implements PaDB.IDB {
   createUser(userData: string): Promise<PaDB.IDBRecord> {
     return new Promise((resolve, reject) => {
       const parsedData = JSON.parse(userData);
-      if (this.validateUserData(parsedData, true)) resolve(this.add(parsedData));
+      if (this.validateUserData(parsedData)) resolve(this.add(parsedData));
       else reject(new ServerError(CommonErrors.noRecsReq));
     });
   }
 
   updateUser(id: string, userData: string): Promise<PaDB.IDBRecord> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       if (this.validateId(id)) {
         const parsedData = JSON.parse(userData);
-        if (this.validateUserData(parsedData, false)) {
-          const oldUser = await this.getUserById(id);
+        if (this.validateUserData(parsedData)) {
+          const oldUser = this.get(id);
           if (oldUser) resolve(this.update(oldUser, parsedData));
           else {
             const error = {
@@ -74,9 +58,9 @@ class DB implements PaDB.IDB {
   }
 
   deleteUser(id: string): Promise<string> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       if (this.validateId(id)) {
-        const user = await this.getUserById(id);
+        const user = this.get(id);
         if (user) {
           this.remove(user);
           resolve(`User with id: ${user.id} was successfuly removed`);
@@ -91,15 +75,12 @@ class DB implements PaDB.IDB {
     });
   }
 
-  validateUserData(data: any, id: boolean) {
+  validateUserData(data: any) {
     const keys = Object.keys(data);
-    if (id) {
-      if (keys.length > 4) return false;
-      else if (!('id' in data && typeof data.id === 'string')) return false;
-    } else if (keys.length > 3) return false;
-    else if (!('username' in data && typeof data.username === 'string')) return false;
-    else if (!('age' in data && typeof data.age === 'number')) return false;
-    else if (!('hobbies' in data && data.hobbies instanceof Array)) return false;
+    if (keys.length > 3) return false;
+    if (!('username' in data && typeof data.username === 'string')) return false;
+    if (!('age' in data && typeof data.age === 'number')) return false;
+    if (!('hobbies' in data && data.hobbies instanceof Array)) return false;
     return true;
   }
 

@@ -1,12 +1,12 @@
 export namespace PaDB {
   export interface IDB {
     db: IDBRecord[];
-    getAllUsers(): Promise<IDBGetResponse>;
+    getAllUsers(): Promise<IDBRecord[]>;
     getUserById(uid: string): Promise<PaDB.IDBRecord>;
     createUser(userData: string): Promise<PaDB.IDBRecord>;
     deleteUser(id: string): Promise<string>;
     updateUser(id: string, userData: string): Promise<PaDB.IDBRecord>;
-    validateUserData(data: any, id: boolean): boolean;
+    validateUserData(data: any): boolean;
     validateId(id: string): boolean;
   }
 
