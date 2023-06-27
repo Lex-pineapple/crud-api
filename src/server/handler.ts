@@ -2,6 +2,7 @@ import DB from '../db/db.ts';
 import UrlParser from '../utils/urlParser.ts';
 import { Server, PaDB, Response, Request } from '../types';
 import getReqData from '../utils/getReqData.ts';
+import ServerError from '../server/error.ts';
 
 class Handler implements Server.Handler {
   methods: Server.IMethods = {
@@ -25,69 +26,59 @@ class Handler implements Server.Handler {
     if (req.url && req.url.startsWith(this.endpoints.users)) {
       const parsedUrl = this.parser.parseEndpoint(req.url, this.endpoints.users);
       this.methods[req.method as keyof typeof this.methods](parsedUrl, res, req);
-    } else this.response(res, 'Route not found', 404, 'e');
+    } else this.send(res, 'Route not found', 404, 'e');
   }
 
   async manageGET(id: string | undefined, res: Response) {
-    if (id) {
-      if (this.db.validateId(id)) {
-        const user = this.db.getUserById(id);
-        if (user) this.response(res, JSON.stringify(user), 200, 'w');
-        else this.response(res, `User with ID ${id} does not exist`, 404, 'e');
-      } else this.response(res, 'User ID is invalid', 400, 'e');
-    } else {
-      const users = this.db.getAllUsers();
-      this.response(res, JSON.stringify(users), 200, 'w');
+    try {
+      if (id) {
+        const user = await this.db.getUserById(id);
+        this.send(res, JSON.stringify(user), 200, 'w');
+      } else {
+        const users = await this.db.getAllUsers();
+        this.send(res, JSON.stringify(users), 200, 'w');
+      }
+    } catch (error) {
+      this.handleError(error, res);
     }
   }
 
   async managePOST(id: string | undefined, res: Response, req: Request) {
     if (!id) {
-      const userData = await getReqData(req);
-      if (userData) {
-        const parsedData = JSON.parse(userData);
-        if (this.db.validateUserData(parsedData, true)) {
-          this.db.createUser(parsedData);
-          this.response(res, JSON.stringify(parsedData), 201, 'e');
-        } else this.response(res, 'Request body does not contain reqied fields', 400, 'e');
-      } else this.response(res, 'Request body does not contain reqied fields', 400, 'e');
-    } else this.response(res, 'Route not found', 404, 'e');
+      try {
+        const userData = await getReqData(req);
+        const dbData = await this.db.createUser(userData);
+        this.send(res, JSON.stringify(dbData), 201, 'e');
+      } catch (error) {
+        this.handleError(error, res);
+      }
+    } else this.send(res, 'Route not found', 404, 'e');
   }
 
   async managePUT(id: string | undefined, res: Response, req: Request) {
     if (id) {
-      if (this.db.validateId(id)) {
+      try {
         const userData = await getReqData(req);
-        if (userData) {
-          const parsedData = JSON.parse(userData);
-          if (this.db.validateUserData(parsedData, false)) {
-            const user = this.db.getUserById(id);
-            if (user) {
-              this.db.updateUser(id, parsedData);
-              this.response(res, JSON.stringify(parsedData), 400, 'e');
-            }
-            this.response(res, `User with ID ${id} does not exist`, 404, 'e');
-          }
-          this.response(res, 'Request body does not contain reqied fields', 400, 'e');
-        }
-        this.response(res, 'Request body does not contain reqied fields', 400, 'e');
-      } else this.response(res, 'User ID is invalid', 400, 'e');
-    } else this.response(res, 'Route not found', 404, 'e');
+        const updUser = await this.db.updateUser(id, userData);
+        this.send(res, JSON.stringify(updUser), 200, 'e');
+      } catch (error) {
+        this.handleError(error, res);
+      }
+    } else this.send(res, 'Route not found', 404, 'e');
   }
 
   async manageDELETE(id: string | undefined, res: Response) {
     if (id) {
-      if (this.db.validateId(id)) {
-        const user = this.db.getUserById(id);
-        if (user) {
-          this.db.deleteUser(user);
-          this.response(res, `User with id: ${user.id} was successfuly removed`, 204, 'e');
-        } else this.response(res, `User with ID ${id} does not exist`, 404, 'e');
-      } else this.response(res, 'User ID is invalid', 400, 'e');
-    } else this.response(res, 'Route not found', 404, 'e');
+      try {
+        const message = await this.db.deleteUser(id);
+        this.send(res, JSON.stringify(message), 204, 'e');
+      } catch (error) {
+        this.handleError(error, res);
+      }
+    } else this.send(res, 'Route not found', 404, 'e');
   }
 
-  response(res: Response, message: string, statusCode: number, perm: string) {
+  send(res: Response, message: string, statusCode: number, perm: string) {
     res.writeHead(statusCode, { 'Content-Type': 'application/json' });
     if (perm === 'w') {
       res.write(message);
@@ -96,6 +87,18 @@ class Handler implements Server.Handler {
     if (perm === 'e') {
       res.end(message);
     }
+  }
+
+  handleError(error: unknown, res: Response) {
+    if (error instanceof ServerError)
+      this.send(res, JSON.stringify(error.message), error.status, 'e');
+    else
+      this.send(
+        res,
+        'The error occured on the side of the server, please try again later',
+        500,
+        'e'
+      );
   }
 }
 

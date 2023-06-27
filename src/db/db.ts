@@ -1,5 +1,7 @@
 import { PaDB } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { RespCodes, CommonErrors } from '../constants.ts';
+import ServerError from '../server/error.ts';
 
 class DB implements PaDB.IDB {
   db: PaDB.IDBRecord[] = [
@@ -17,38 +19,76 @@ class DB implements PaDB.IDB {
     },
   ];
 
-  getAllUsers(): PaDB.IDBGetResponse {
-    return {
-      totalRecords: this.db.length,
-      records: [...this.db],
-    };
-  }
-
-  getUserById(uid: string): PaDB.IDBRecord | undefined {
-    return this.db.find((item) => item.id == uid);
-  }
-
-  createUser(data: PaDB.IDBRecord) {
-    this.db.push({
-      id: uuidv4(),
-      ...data,
+  getAllUsers(): Promise<PaDB.IDBGetResponse> {
+    return new Promise((resolve, _) => {
+      const data = {
+        totalRecords: this.db.length,
+        records: [...this.db],
+      };
+      // throw new Error('Whoopsie!');
+      resolve(data);
     });
   }
 
-  deleteUser(data: PaDB.IDBRecord) {
-    const index = this.db.indexOf(data);
-    if (index > -1) this.db.splice(index, 1);
+  getUserById(uid: string): Promise<PaDB.IDBRecord> {
+    return new Promise((resolve, reject) => {
+      if (this.validateId(uid)) {
+        const user = this.get(uid);
+        if (user) resolve(user);
+        else {
+          const error = {
+            message: `User with ID ${uid} does not exist`,
+            status: RespCodes.ClientError.NotFound,
+          };
+          reject(new ServerError(error));
+        }
+      } else reject(new ServerError(CommonErrors.idInvalid));
+    });
   }
 
-  updateUser(id: string, data: PaDB.IDBRecord) {
-    const oldUser = this.getUserById(id);
-    if (oldUser) {
-      const index = this.db.indexOf(oldUser);
-      this.db[index] = {
-        id,
-        ...data,
-      };
-    }
+  createUser(userData: string): Promise<PaDB.IDBRecord> {
+    return new Promise((resolve, reject) => {
+      const parsedData = JSON.parse(userData);
+      if (this.validateUserData(parsedData, true)) resolve(this.add(parsedData));
+      else reject(new ServerError(CommonErrors.noRecsReq));
+    });
+  }
+
+  updateUser(id: string, userData: string): Promise<PaDB.IDBRecord> {
+    return new Promise(async (resolve, reject) => {
+      if (this.validateId(id)) {
+        const parsedData = JSON.parse(userData);
+        if (this.validateUserData(parsedData, false)) {
+          const oldUser = await this.getUserById(id);
+          if (oldUser) resolve(this.update(oldUser, parsedData));
+          else {
+            const error = {
+              message: `User with ID ${id} does not exist`,
+              status: RespCodes.ClientError.NotFound,
+            };
+            reject(new ServerError(error));
+          }
+        } else reject(new ServerError(CommonErrors.noRecsReq));
+      } else reject(new ServerError(CommonErrors.idInvalid));
+    });
+  }
+
+  deleteUser(id: string): Promise<string> {
+    return new Promise(async (resolve, reject) => {
+      if (this.validateId(id)) {
+        const user = await this.getUserById(id);
+        if (user) {
+          this.remove(user);
+          resolve(`User with id: ${user.id} was successfuly removed`);
+        } else {
+          const error = {
+            message: `User with ID ${id} does not exist`,
+            status: RespCodes.ClientError.NotFound,
+          };
+          reject(new ServerError(error));
+        }
+      } else reject(new ServerError(CommonErrors.idInvalid));
+    });
   }
 
   validateUserData(data: any, id: boolean) {
@@ -67,6 +107,34 @@ class DB implements PaDB.IDB {
     const uuidRegExp =
       /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/gi;
     return uuidRegExp.test(id);
+  }
+
+  get(id: string) {
+    return this.db.find((item) => item.id === id);
+  }
+
+  add(data: PaDB.IDBRecord) {
+    const newUser = {
+      id: uuidv4(),
+      ...data,
+    };
+    this.db.push(newUser);
+    return newUser;
+  }
+
+  update(oldData: PaDB.IDBRecord, newData: PaDB.IDBRecord) {
+    const index = this.db.indexOf(oldData);
+    const updatedUser = {
+      id: oldData.id,
+      ...newData,
+    };
+    this.db[index] = updatedUser;
+    return updatedUser;
+  }
+
+  remove(data: PaDB.IDBRecord) {
+    const index = this.db.indexOf(data);
+    if (index > -1) this.db.splice(index, 1);
   }
 }
 

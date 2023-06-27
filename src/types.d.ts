@@ -1,11 +1,11 @@
 export namespace PaDB {
   export interface IDB {
     db: IDBRecord[];
-    getAllUsers(): IDBGetResponse;
-    getUserById(uid: string): PaDB.IDBRecord | undefined;
-    createUser(data: PaDB.IDBRecord): void;
-    deleteUser(data: PaDB.IDBRecord): void;
-    updateUser(id: string, data: PaDB.IDBRecord): void;
+    getAllUsers(): Promise<IDBGetResponse>;
+    getUserById(uid: string): Promise<PaDB.IDBRecord>;
+    createUser(userData: string): Promise<PaDB.IDBRecord>;
+    deleteUser(id: string): Promise<string>;
+    updateUser(id: string, userData: string): Promise<PaDB.IDBRecord>;
     validateUserData(data: any, id: boolean): boolean;
     validateId(id: string): boolean;
   }
@@ -38,7 +38,12 @@ export namespace Server {
 
     managePUT(url: string | undefined, res: Response, req: Request): Promise<void>;
 
-    response(res: Response, message: string, statusCode: number, perm: string): void;
+    send(res: Response, message: string, statusCode: number, perm: string): void;
+  }
+
+  export interface Error {
+    message: string;
+    status: number;
   }
 
   export interface IEndpoints {
