@@ -217,14 +217,14 @@ describe('e2e tests', () => {
     let dbData: PaDB.IDBRecord[] = [];
     let dbData2: PaDB.IDBRecord[] = [];
     beforeAll(() => {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 50; i++) {
         genData.push({
           username: generateString(5),
           age: generateNumber(3),
           hobbies: new Array().fill(generateString(5), generateNumber(1)),
         });
       }
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 50; i++) {
         genData2.push({
           username: generateString(5),
           age: generateNumber(3),

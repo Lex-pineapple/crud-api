@@ -6,6 +6,10 @@ import ServerError from '../server/error.ts';
 class DB implements PaDB.IDB {
   db: PaDB.IDBRecord[] = [];
 
+  setAllUsers(data: PaDB.IDBRecord[]) {
+    this.db = data;
+  }
+
   getAllUsers(): Promise<PaDB.IDBRecord[]> {
     return new Promise((resolve, _) => {
       const data = this.db;

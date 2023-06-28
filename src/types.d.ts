@@ -1,6 +1,7 @@
 export namespace PaDB {
   export interface IDB {
     db: IDBRecord[];
+    setAllUsers(data: IDBRecord[]): void;
     getAllUsers(): Promise<IDBRecord[]>;
     getUserById(uid: string): Promise<PaDB.IDBRecord>;
     createUser(userData: string): Promise<PaDB.IDBRecord>;

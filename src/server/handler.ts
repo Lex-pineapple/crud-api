@@ -3,6 +3,7 @@ import UrlParser from '../utils/urlParser.ts';
 import { Server, PaDB, Response, Request } from '../types';
 import getReqData from '../utils/getReqData.ts';
 import ServerError from '../server/error.ts';
+import cluster from 'cluster';
 
 class Handler implements Server.Handler {
   methods: Server.IMethods = {
@@ -33,9 +34,11 @@ class Handler implements Server.Handler {
     try {
       if (id) {
         const user = await this.db.getUserById(id);
+        if (cluster.isWorker && process.send) process.send(JSON.stringify(this.db.db));
         this.send(res, JSON.stringify(user), 200, 'w');
       } else {
         const users = await this.db.getAllUsers();
+        if (cluster.isWorker && process.send) process.send(JSON.stringify(this.db.db));
         this.send(res, JSON.stringify(users), 200, 'w');
       }
     } catch (error) {
@@ -48,6 +51,7 @@ class Handler implements Server.Handler {
       try {
         const userData = await getReqData(req);
         const dbData = await this.db.createUser(userData);
+        if (cluster.isWorker && process.send) process.send(JSON.stringify(this.db.db));
         this.send(res, JSON.stringify(dbData), 201, 'e');
       } catch (error) {
         this.handleError(error, res);
@@ -60,6 +64,7 @@ class Handler implements Server.Handler {
       try {
         const userData = await getReqData(req);
         const updUser = await this.db.updateUser(id, userData);
+        if (cluster.isWorker && process.send) process.send(JSON.stringify(this.db.db));
         this.send(res, JSON.stringify(updUser), 200, 'e');
       } catch (error) {
         this.handleError(error, res);
@@ -71,6 +76,7 @@ class Handler implements Server.Handler {
     if (id) {
       try {
         await this.db.deleteUser(id);
+        if (cluster.isWorker && process.send) process.send(JSON.stringify(this.db.db));
         this.send(res, '', 204, 'w');
       } catch (error) {
         this.handleError(error, res);
