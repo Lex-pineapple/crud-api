@@ -10,7 +10,7 @@
     "build": "",
     "ci": "start-server-and-test start:dev http-get://localhost:4000/api/users test",
     "lint": "eslint . --ext .ts,.js",
-    "test": "jest"
+    "test": "jest --runInBand"
   },
   "repository": {
     "type": "git",

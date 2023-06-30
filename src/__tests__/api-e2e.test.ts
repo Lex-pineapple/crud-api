@@ -6,6 +6,14 @@ const APILink = 'http://localhost:4000';
 
 describe('e2e tests', () => {
   const endpoint = '/api/users';
+  afterAll(async () => {
+    const response = await request(APILink).get(endpoint);
+    if (response.body) {
+      response.body.forEach(async (item: PaDB.IDBRecord) => {
+        await request(APILink).delete(endpoint + '/' + item.id);
+      });
+    }
+  });
   describe('case #1', () => {
     const data = {
       username: 'Mimi',
@@ -146,7 +154,7 @@ describe('e2e tests', () => {
       expect(response.body).toMatchObject(createdRecord);
     });
 
-    test('should fail update record', async () => {
+    test('should fail to update record', async () => {
       const response = await request(APILink)
         .put(endpoint + '/' + createdRecord.id)
         .send({
