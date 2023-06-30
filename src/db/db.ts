@@ -34,28 +34,32 @@ class DB implements PaDB.IDB {
     });
   }
 
-  createUser(userData: string): Promise<PaDB.IDBRecord> {
+  createUser(userData: string | undefined): Promise<PaDB.IDBRecord> {
     return new Promise((resolve, reject) => {
-      const parsedData = JSON.parse(userData);
-      if (this.validateUserData(parsedData)) resolve(this.add(parsedData));
-      else reject(new ServerError(CommonErrors.noRecsReq));
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        if (this.validateUserData(parsedData)) resolve(this.add(parsedData));
+        else reject(new ServerError(CommonErrors.noRecsReq));
+      } else reject(new ServerError(CommonErrors.noRecsReq));
     });
   }
 
   updateUser(id: string, userData: string): Promise<PaDB.IDBRecord> {
     return new Promise((resolve, reject) => {
       if (this.validateId(id)) {
-        const parsedData = JSON.parse(userData);
-        if (this.validateUserData(parsedData)) {
-          const oldUser = this.get(id);
-          if (oldUser) resolve(this.update(oldUser, parsedData));
-          else {
-            const error = {
-              message: `User with ID ${id} does not exist`,
-              status: RespCodes.ClientError.NotFound,
-            };
-            reject(new ServerError(error));
-          }
+        if (userData) {
+          const parsedData = JSON.parse(userData);
+          if (this.validateUserData(parsedData)) {
+            const oldUser = this.get(id);
+            if (oldUser) resolve(this.update(oldUser, parsedData));
+            else {
+              const error = {
+                message: `User with ID ${id} does not exist`,
+                status: RespCodes.ClientError.NotFound,
+              };
+              reject(new ServerError(error));
+            }
+          } else reject(new ServerError(CommonErrors.noRecsReq));
         } else reject(new ServerError(CommonErrors.noRecsReq));
       } else reject(new ServerError(CommonErrors.idInvalid));
     });
@@ -85,6 +89,9 @@ class DB implements PaDB.IDB {
     if (!('username' in data && typeof data.username === 'string')) return false;
     if (!('age' in data && typeof data.age === 'number')) return false;
     if (!('hobbies' in data && data.hobbies instanceof Array)) return false;
+    if (data.hobbies.length > 0) {
+      if (!data.hobbies.every((i: any) => typeof i === 'string')) return false;
+    }
     return true;
   }
 

@@ -219,11 +219,10 @@ describe('e2e tests', () => {
       expect(response.body).toMatchObject([]);
     });
   });
+
   describe('case #3', () => {
     const genData: PaDB.IDBRecord[] = [];
-    const genData2: PaDB.IDBRecord[] = [];
     let dbData: PaDB.IDBRecord[] = [];
-    let dbData2: PaDB.IDBRecord[] = [];
     beforeAll(() => {
       for (let i = 0; i < 50; i++) {
         genData.push({
@@ -232,59 +231,80 @@ describe('e2e tests', () => {
           hobbies: new Array().fill(generateString(5), generateNumber(1)),
         });
       }
-      for (let i = 0; i < 50; i++) {
-        genData2.push({
-          username: generateString(5),
-          age: generateNumber(3),
-          hobbies: new Array().fill(generateString(5), generateNumber(1)),
+    });
+    afterAll(async () => {
+      const response = await request(APILink).get(endpoint);
+      if (response.body) {
+        response.body.forEach(async (item: PaDB.IDBRecord) => {
+          await request(APILink).delete(endpoint + '/' + item.id);
         });
       }
     });
 
-    describe('random tests', () => {
-      test('should create multiple new records', async () => {
-        for (let i = 0; i < genData.length; i++) {
-          const response = await request(APILink).post(endpoint).send(genData[i]);
-          expect(response.statusCode).toBe(201);
-        }
-      });
+    test('should get empty db', async () => {
+      const response = await request(APILink).get(endpoint);
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toMatchObject([]);
+    });
 
-      test('should get all records', async () => {
-        const response = await request(APILink).get(endpoint);
-        expect(response.statusCode).toBe(200);
-        expect(response.body.length).toBe(genData.length);
-        dbData = response.body;
-      });
+    test('should post data', async () => {
+      const response = await request(APILink).post(endpoint).send(genData[0]);
+      dbData.push(response.body);
+    });
 
-      test('should update all records', async () => {
-        for (let i = 0; i < dbData.length; i++) {
-          const response = await request(APILink)
-            .put(endpoint + '/' + dbData[i].id)
-            .send(genData2[i]);
-          expect(response.statusCode).toBe(200);
-        }
-      });
+    test('should get data', async () => {
+      const response = await request(APILink).get(endpoint);
+      expect(response.body).toMatchObject(dbData);
+    });
 
-      test('should get all records', async () => {
-        const response = await request(APILink).get(endpoint);
-        expect(response.statusCode).toBe(200);
-        expect(response.body.length).toBe(genData.length);
-        dbData2 = response.body;
-      });
+    test('should post data', async () => {
+      const response = await request(APILink).post(endpoint).send(genData[1]);
+      dbData.push(response.body);
+    });
 
-      test('should delete all records', async () => {
-        for (let i = 0; i < dbData2.length; i++) {
-          const response = await request(APILink).delete(endpoint + '/' + dbData2[i].id);
-          expect(response.statusCode).toBe(204);
-          expect(response.body).toBe('');
-        }
-      });
+    test('should post data', async () => {
+      const response = await request(APILink).post(endpoint).send(genData[2]);
+      dbData.push(response.body);
+    });
 
-      test('should get empty db', async () => {
-        const response = await request(APILink).get(endpoint);
-        expect(response.statusCode).toBe(200);
-        expect(response.body).toMatchObject([]);
-      });
+    test('should get data', async () => {
+      const response = await request(APILink).get(endpoint);
+      expect(response.body).toMatchObject(dbData);
+    });
+
+    test('should update data', async () => {
+      const response = await request(APILink)
+        .put(endpoint + '/' + dbData[0].id)
+        .send({
+          username: 'hahe',
+          age: 12,
+          hobbies: [],
+        });
+      expect(response.body.id).toBe(dbData[0].id);
+      dbData[0] = response.body;
+    });
+
+    test('should get data', async () => {
+      const response = await request(APILink).get(endpoint);
+      expect(response.body).toMatchObject(dbData);
+    });
+
+    test('should delete data', async () => {
+      await request(APILink).delete(endpoint + '/' + dbData[0].id);
+      dbData.shift();
+      const response = await request(APILink).get(endpoint);
+      expect(response.body).toMatchObject(dbData);
+    });
+
+    test('should fail to delete already deleted data', async () => {
+      const failId = dbData[0].id;
+      const responseDel1 = await request(APILink).delete(endpoint + '/' + failId);
+      expect(responseDel1.statusCode).toBe(204);
+      dbData.shift();
+      const responseDel2 = await request(APILink).delete(endpoint + '/' + failId);
+      expect(responseDel2.statusCode).toBe(404);
+      const responseGet = await request(APILink).get(endpoint);
+      expect(responseGet.body).toMatchObject(dbData);
     });
   });
 });

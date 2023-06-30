@@ -241,7 +241,7 @@ describe('Test negative cases', () => {
           .send({
             username: 'Mimi',
             age: 12,
-            hobbies: [12],
+            hobbies: ['12'],
           });
         expect(response.statusCode).toBe(404);
         expect(response.body).toBe(`User with ID ${id} does not exist`);
