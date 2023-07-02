@@ -1,8 +1,8 @@
 import os from 'os';
 import cluster from 'cluster';
 import 'dotenv/config';
-import server from './server.ts';
-import createLoadBalancer from './cluster/createMainServer.ts';
+import server from './server';
+import createLoadBalancer from './cluster/createMainServer';
 import { PaDB } from './types';
 
 const PORT = parseInt(process.env.PORT!) || 4000;

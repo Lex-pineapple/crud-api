@@ -1,5 +1,5 @@
 import http from 'node:http';
-import getReqData from '../utils/getReqData.ts';
+import getReqData from '../utils/getReqData';
 
 function createLoadBalancer(ports: number[], cpuCount: number) {
   let currPortIDX = 0;

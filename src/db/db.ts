@@ -1,7 +1,7 @@
 import { PaDB } from '../types';
 import { v4 as uuidv4 } from 'uuid';
-import { RespCodes, CommonErrors } from '../constants.ts';
-import ServerError from '../server/error.ts';
+import { RespCodes, CommonErrors } from '../constants';
+import ServerError from '../server/error';
 
 class DB implements PaDB.IDB {
   db: PaDB.IDBRecord[] = [];

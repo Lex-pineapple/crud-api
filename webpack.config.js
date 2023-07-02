@@ -1,12 +1,23 @@
-const path = require('path');
+import path from "path";
+import { fileURLToPath } from "url";
 
-module.exports = {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default {
   entry: './index.ts',
+  mode: "development",
+  target: "node",
   module: {
     rules: [
       {
         test: /\.ts?$/,
-        use: 'ts-loader',
+        loader: 'ts-loader',
+        options: {
+          compilerOptions: {
+            "noEmit": false,
+            "allowImportingTsExtensions": false,
+          }
+        },
         exclude: /node_modules/,
       },
     ],

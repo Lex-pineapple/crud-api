@@ -1,8 +1,8 @@
-import DB from '../db/db.ts';
-import UrlParser from '../utils/urlParser.ts';
+import DB from '../db/db';
+import UrlParser from '../utils/urlParser';
 import { Server, PaDB, Response, Request } from '../types';
-import getReqData from '../utils/getReqData.ts';
-import ServerError from '../server/error.ts';
+import getReqData from '../utils/getReqData';
+import ServerError from '../server/error';
 import cluster from 'cluster';
 
 class Handler implements Server.Handler {

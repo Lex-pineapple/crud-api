@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "esnext",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "module": "ES2020",
+    "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "./dist",
     "skipLibCheck": true,

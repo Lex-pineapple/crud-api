@@ -1,5 +1,5 @@
 import http from 'node:http';
-import Handler from './server/handler.ts';
+import Handler from './server/handler';
 
 const handler = new Handler();
 
