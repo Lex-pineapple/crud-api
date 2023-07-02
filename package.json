@@ -8,7 +8,7 @@
     "start:prod": "npm run build && cross-env NODE_ENV=production npm run start:dev",
     "start:multi": "nodemon --esm ./src/cluster.ts",
     "build": "",
-    "ci": "start-server-and-test start:dev http-get://localhost:4000/api/users test",
+    "test:ci": "start-server-and-test start:dev http-get://localhost:4000/api/users test",
     "lint": "eslint . --ext .ts,.js",
     "test": "jest --runInBand"
   },
