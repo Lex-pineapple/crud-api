@@ -1,11 +1,11 @@
 import http from 'node:http';
 import getReqData from '../utils/getReqData';
 
-function createLoadBalancer(ports: number[], cpuCount: number) {
-  let currPortIDX = 0;
+function createLoadBalancer(cpuCount: number) {
+  let currPortIDX = 1;
 
   return http.createServer(async (req, res) => {
-    const currWorkerPort = ports[currPortIDX++ % cpuCount];
+    const currWorkerPort = 4000 + (currPortIDX++ % cpuCount);
     console.log(`\nSending request to [${req.method}] ${currWorkerPort}\n`);
     const reqData = await getReqData(req);
 
@@ -29,8 +29,21 @@ function createLoadBalancer(ports: number[], cpuCount: number) {
           res.write(msg);
           res.end();
         });
+        connectorRes.on('error', () => {
+          console.log('An error occured');
+
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end('The error occured on the side of the server, please try again later');
+        });
       }
     );
+
+    connector.on('error', () => {
+      console.log('An error occured');
+
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end('The error occured on the side of the server, please try again later');
+    });
 
     if (req.method !== 'GET') connector.write(reqData);
     connector.end();
