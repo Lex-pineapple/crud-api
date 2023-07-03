@@ -3,15 +3,19 @@ import Handler from './server/handler';
 
 const handler = new Handler();
 
-// const isProd = process.env.NODE_ENV === 'production';
-process.on('message', (data: any) => {
-  process.stdout.write(`Updating users on worker ${process.pid}\n`);
+process.on('message', (data: string) => {
+  // set DB data to all users in the worker
   handler.db.setAllUsers(JSON.parse(data));
 });
+
 const server = http.createServer(async (req, res) => {
-  if (req.method && req.method in handler.methods) {
-    handler.delegate(res, req);
-  } else handler.send(res, JSON.stringify('Route not found'), 404, 'e');
+  try {
+    if (req.method && req.method in handler.methods) {
+      handler.delegate(res, req);
+    } else handler.send(res, JSON.stringify('Route not found'), 404, 'e');
+  } catch (error) {
+    handler.handleError(error, res);
+  }
 });
 
 export default server;

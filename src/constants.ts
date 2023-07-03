@@ -44,4 +44,8 @@ export const CommonErrors = {
     message: 'Request body does not contain reqied fields',
     status: RespCodes.ClientError.BadRequest,
   },
+  notFound: {
+    message: 'Route not found',
+    status: RespCodes.ClientError.NotFound,
+  },
 };

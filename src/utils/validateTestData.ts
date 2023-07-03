@@ -1,10 +1,4 @@
 function validateTestData(data: any) {
-  const keys = Object.keys(data);
-  if (keys.length !== 3)
-    return {
-      isValid: false,
-      data,
-    };
   if (typeof data.age !== 'number')
     return {
       isValid: false,

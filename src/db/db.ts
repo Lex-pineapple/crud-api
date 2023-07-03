@@ -20,6 +20,7 @@ class DB implements PaDB.IDB {
 
   getUserById(uid: string): Promise<PaDB.IDBRecord> {
     return new Promise((resolve, reject) => {
+      if (this.isPath(uid)) reject(new ServerError(CommonErrors.notFound));
       if (this.validateId(uid)) {
         const user = this.get(uid);
         if (user) resolve(user);
@@ -46,6 +47,7 @@ class DB implements PaDB.IDB {
 
   updateUser(id: string, userData: string): Promise<PaDB.IDBRecord> {
     return new Promise((resolve, reject) => {
+      if (this.isPath(id)) reject(new ServerError(CommonErrors.notFound));
       if (this.validateId(id)) {
         if (userData) {
           const parsedData = JSON.parse(userData);
@@ -67,6 +69,7 @@ class DB implements PaDB.IDB {
 
   deleteUser(id: string): Promise<string> {
     return new Promise((resolve, reject) => {
+      if (this.isPath(id)) reject(new ServerError(CommonErrors.notFound));
       if (this.validateId(id)) {
         const user = this.get(id);
         if (user) {
@@ -83,9 +86,11 @@ class DB implements PaDB.IDB {
     });
   }
 
+  isPath(id: string) {
+    return id.split('/').length > 1;
+  }
+
   validateUserData(data: any) {
-    const keys = Object.keys(data);
-    if (keys.length > 3) return false;
     if (!('username' in data && typeof data.username === 'string')) return false;
     if (!('age' in data && typeof data.age === 'number')) return false;
     if (!('hobbies' in data && data.hobbies instanceof Array)) return false;
@@ -108,7 +113,9 @@ class DB implements PaDB.IDB {
   add(data: PaDB.IDBRecord) {
     const newUser = {
       id: uuidv4(),
-      ...data,
+      username: data.username,
+      age: data.age,
+      hobbies: data.hobbies,
     };
     this.db.push(newUser);
     return newUser;
@@ -118,7 +125,9 @@ class DB implements PaDB.IDB {
     const index = this.db.indexOf(oldData);
     const updatedUser = {
       id: oldData.id,
-      ...newData,
+      username: newData.username,
+      age: newData.age,
+      hobbies: newData.hobbies,
     };
     this.db[index] = updatedUser;
     return updatedUser;
