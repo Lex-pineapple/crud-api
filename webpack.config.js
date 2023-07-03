@@ -1,12 +1,9 @@
-import path from "path";
-import { fileURLToPath } from "url";
+const path = require('path');
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-export default {
+module.exports = {
   entry: './index.ts',
-  mode: "development",
-  target: "node",
+  mode: 'development',
+  target: 'node',
   module: {
     rules: [
       {
@@ -14,9 +11,9 @@ export default {
         loader: 'ts-loader',
         options: {
           compilerOptions: {
-            "noEmit": false,
-            "allowImportingTsExtensions": false,
-          }
+            noEmit: false,
+            allowImportingTsExtensions: false,
+          },
         },
         exclude: /node_modules/,
       },
