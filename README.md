@@ -34,6 +34,10 @@ To run tests (the server has to be started separately):
 npm run test
 ```
 
+### Tests
+
+There are three types of tests, in different files: negative tests, random tests and e2e tests (single file, contains 3 cases, for more see code).
+
 ### Implemented endpoint - api/users
 
 - **GET** api/users - to get all records

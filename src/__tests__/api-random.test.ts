@@ -23,7 +23,7 @@ describe('random tests', () => {
       genData2.push({
         username: generateString(5),
         age: generateNumber(3),
-        hobbies: new Array().fill(generateString(5), generateNumber(1)),
+        hobbies: new Array(generateNumber(1)).fill(generateString(5)),
       });
     }
   });

@@ -98,7 +98,7 @@ describe('e2e tests', () => {
       id: '56b28301-667e-4548-ae18-b9fb5dc7da49',
       username: 'Mimi',
       age: 25,
-      hobbies: ['barking'],
+      hobbies: [12],
     };
     const wrongData2 = {
       username: 12,
@@ -222,13 +222,13 @@ describe('e2e tests', () => {
 
   describe('case #3', () => {
     const genData: PaDB.IDBRecord[] = [];
-    let dbData: PaDB.IDBRecord[] = [];
+    const dbData: PaDB.IDBRecord[] = [];
     beforeAll(() => {
       for (let i = 0; i < 50; i++) {
         genData.push({
           username: generateString(5),
           age: generateNumber(3),
-          hobbies: new Array().fill(generateString(5), generateNumber(1)),
+          hobbies: new Array(generateNumber(1)).fill(generateString(5)),
         });
       }
     });
