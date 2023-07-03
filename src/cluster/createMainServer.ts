@@ -1,11 +1,11 @@
 import http from 'node:http';
 import getReqData from '../utils/getReqData';
 
-function createLoadBalancer(ports: number[], cpuCount: number) {
+function createLoadBalancer(PORT: number, ports: number[], cpuCount: number) {
   let currPortIDX = 0;
 
   return http.createServer(async (req, res) => {
-    const currWorkerPort = 4000 + ports[currPortIDX++ % cpuCount];
+    const currWorkerPort = PORT + ports[currPortIDX++ % cpuCount];
     console.log(`\nSending request to [${req.method}] ${currWorkerPort}\n`);
     const reqData = await getReqData(req);
 

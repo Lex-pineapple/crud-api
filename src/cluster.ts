@@ -35,7 +35,7 @@ if (cluster.isPrimary) {
     console.log(`Worker ${worker.process.pid} died`);
   });
 
-  const loadBalancer = createLoadBalancer(ports, cpuCount);
+  const loadBalancer = createLoadBalancer(PORT, ports, cpuCount);
 
   loadBalancer.listen(PORT, () => {
     console.log(`Load balancer ${process.pid} started on port ${PORT}`);
