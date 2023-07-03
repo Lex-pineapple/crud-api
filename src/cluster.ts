@@ -8,6 +8,7 @@ import createLoadBalancer from './cluster/createMainServer';
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 4000;
 const workers: Array<any> = [];
 const cpuCount = os.cpus().length;
+const ports: number[] = [];
 
 if (cluster.isPrimary) {
   // Fork workers
@@ -16,6 +17,7 @@ if (cluster.isPrimary) {
 
   for (let i = 0; i < cpuCount; i++) {
     const newWorker = cluster.fork();
+    ports.push(i + 1);
     workers.push(newWorker);
   }
 
@@ -33,7 +35,7 @@ if (cluster.isPrimary) {
     console.log(`Worker ${worker.process.pid} died`);
   });
 
-  const loadBalancer = createLoadBalancer(cpuCount);
+  const loadBalancer = createLoadBalancer(ports, cpuCount);
 
   loadBalancer.listen(PORT, () => {
     console.log(`Load balancer ${process.pid} started on port ${PORT}`);
